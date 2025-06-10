@@ -57,3 +57,7 @@ pids
 
 # Yarn Integrity file
 .yarn-integrity
+
+
+# Misc stuff 
+todos.md

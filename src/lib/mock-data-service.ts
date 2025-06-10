@@ -1,4 +1,4 @@
-import { parseTypeScriptInterfaces } from './typescript-parser';
+import { parseTypeScriptDefinitions } from './typescript-parser';
 import { generateInterfaceObject, DEFAULT_OPTIONS } from './mock-generator';
 import { setFakerSeed, resetFakerSeed } from './faker-util';
 import { GenerationOptions, GeneratedData } from '../types';
@@ -15,7 +15,8 @@ export async function generateMockData(
   source: string,
   options: GenerationOptions = DEFAULT_OPTIONS
 ): Promise<GeneratedData[]> {
-  const interfaces = await parseTypeScriptInterfaces(source);
+  const result = await parseTypeScriptDefinitions(source);
+  const interfaces = result.interfaces;
   const interfaceMap: Record<string, any> = {};
   
   interfaces.forEach(item => {

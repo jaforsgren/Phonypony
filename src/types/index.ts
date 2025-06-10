@@ -15,6 +15,17 @@ export interface InterfaceDefinition {
   members: InterfaceMember[];
 }
 
+export interface TypeDefinition {
+  name: string;
+  type: string;
+  kind: 'interface' | 'type';
+}
+
+export interface ParsedDefinitions {
+  interfaces: InterfaceDefinition[];
+  types: TypeDefinition[];
+}
+
 export interface GenerationOptions {
   count: number;
   numberMax: number;
