@@ -205,4 +205,123 @@ describe('TypeScript Parser', () => {
     expect(typeAliases).toHaveLength(1);
     expect(typeAliases[0].name).toBe('UserRole');
   });
+
+  describe('Enum Parsing', () => {
+    it('should parse string enum', async () => {
+      const source = `
+        enum Status {
+          ACTIVE = "active",
+          INACTIVE = "inactive",
+          PENDING = "pending"
+        }
+      `;
+      
+      const result = await parseTypeScriptDefinitions(source);
+      
+      expect(result.enums).toHaveLength(1);
+      expect(result.enums[0].name).toBe('Status');
+      expect(result.enums[0].members).toHaveLength(3);
+      expect(result.enums[0].members[0]).toEqual({ name: 'ACTIVE', value: 'active' });
+      expect(result.enums[0].members[1]).toEqual({ name: 'INACTIVE', value: 'inactive' });
+      expect(result.enums[0].members[2]).toEqual({ name: 'PENDING', value: 'pending' });
+    });
+
+    it('should parse numeric enum', async () => {
+      const source = `
+        enum Priority {
+          LOW = 1,
+          MEDIUM = 2,
+          HIGH = 3
+        }
+      `;
+      
+      const result = await parseTypeScriptDefinitions(source);
+      
+      expect(result.enums).toHaveLength(1);
+      expect(result.enums[0].name).toBe('Priority');
+      expect(result.enums[0].members).toHaveLength(3);
+      expect(result.enums[0].members[0]).toEqual({ name: 'LOW', value: 1 });
+      expect(result.enums[0].members[1]).toEqual({ name: 'MEDIUM', value: 2 });
+      expect(result.enums[0].members[2]).toEqual({ name: 'HIGH', value: 3 });
+    });
+
+    it('should parse auto-incrementing numeric enum', async () => {
+      const source = `
+        enum Direction {
+          Up,
+          Down,
+          Left,
+          Right
+        }
+      `;
+      
+      const result = await parseTypeScriptDefinitions(source);
+      
+      expect(result.enums).toHaveLength(1);
+      expect(result.enums[0].name).toBe('Direction');
+      expect(result.enums[0].members).toHaveLength(4);
+      expect(result.enums[0].members[0]).toEqual({ name: 'Up', value: 0 });
+      expect(result.enums[0].members[1]).toEqual({ name: 'Down', value: 1 });
+      expect(result.enums[0].members[2]).toEqual({ name: 'Left', value: 2 });
+      expect(result.enums[0].members[3]).toEqual({ name: 'Right', value: 3 });
+    });
+
+    it('should parse multiple enums', async () => {
+      const source = `
+        enum Status {
+          ACTIVE = "active",
+          INACTIVE = "inactive"
+        }
+        
+        enum Priority {
+          LOW = 1,
+          HIGH = 2
+        }
+      `;
+      
+      const result = await parseTypeScriptDefinitions(source);
+      
+      expect(result.enums).toHaveLength(2);
+      expect(result.enums[0].name).toBe('Status');
+      expect(result.enums[1].name).toBe('Priority');
+    });
+
+    it('should include enums in types array', async () => {
+      const source = `
+        enum Status {
+          ACTIVE = "active",
+          INACTIVE = "inactive"
+        }
+      `;
+      
+      const result = await parseTypeScriptDefinitions(source);
+      
+      const enumTypes = result.types.filter(t => t.kind === 'enum');
+      expect(enumTypes).toHaveLength(1);
+      expect(enumTypes[0].name).toBe('Status');
+      expect(enumTypes[0].type).toBe('enum Status');
+      expect(enumTypes[0].kind).toBe('enum');
+    });
+
+    it('should parse interface with enum properties', async () => {
+      const source = `
+        enum Status {
+          ACTIVE = "active",
+          INACTIVE = "inactive"
+        }
+        
+        interface Task {
+          id: number;
+          status: Status;
+          tags: string[];
+        }
+      `;
+      
+      const result = await parseTypeScriptDefinitions(source);
+      
+      expect(result.enums).toHaveLength(1);
+      expect(result.interfaces).toHaveLength(1);
+      expect(result.interfaces[0].members[1]).toEqual({ name: 'status', type: 'Status' });
+    });
+  });
 });

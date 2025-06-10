@@ -1,4 +1,4 @@
-import { generatePrimitiveValue, generateArrayValue, generateInterfaceObject, DEFAULT_OPTIONS } from '../src/lib/mock-generator';
+import { generatePrimitiveValue, generateArrayValue, generateInterfaceObject, generateEnumValue, DEFAULT_OPTIONS } from '../src/lib/mock-generator';
 import { MemberType } from '../src/types';
 
 describe('Mock Generator', () => {
@@ -34,7 +34,7 @@ describe('Mock Generator', () => {
 
   describe('generateArrayValue', () => {
     it('should generate array of primitive values', () => {
-      const result = generateArrayValue('string', {}, DEFAULT_OPTIONS, 1, 0);
+      const result = generateArrayValue('string', {}, {}, DEFAULT_OPTIONS, 1, 0);
       expect(Array.isArray(result)).toBe(true);
       expect(result.length).toBeGreaterThan(0);
       expect(typeof result[0]).toBe('string');
@@ -47,7 +47,7 @@ describe('Mock Generator', () => {
           { name: 'name', type: 'string' }
         ]
       };
-      const result = generateArrayValue('TestInterface', interfaceMap, DEFAULT_OPTIONS, 1, 0);
+      const result = generateArrayValue('TestInterface', interfaceMap, {}, DEFAULT_OPTIONS, 1, 0);
       expect(Array.isArray(result)).toBe(true);
       expect(result[0]).toHaveProperty('id');
       expect(result[0]).toHaveProperty('name');
@@ -64,7 +64,7 @@ describe('Mock Generator', () => {
         ]
       };
       
-      const result = generateInterfaceObject('Pony', interfaceMap, DEFAULT_OPTIONS, 1, 0);
+      const result = generateInterfaceObject('Pony', interfaceMap, {}, DEFAULT_OPTIONS, 1, 0);
       
       expect(result).toHaveProperty('id');
       expect(result).toHaveProperty('email');
@@ -86,7 +86,7 @@ describe('Mock Generator', () => {
         ]
       };
       
-      const result = generateInterfaceObject('Pony', interfaceMap, DEFAULT_OPTIONS, 1, 0);
+      const result = generateInterfaceObject('Pony', interfaceMap, {}, DEFAULT_OPTIONS, 1, 0);
       
       expect(result).toHaveProperty('name');
       expect(result).toHaveProperty('address');
@@ -102,7 +102,7 @@ describe('Mock Generator', () => {
         ]
       };
       
-      const result = generateInterfaceObject('Pony', interfaceMap, DEFAULT_OPTIONS, 1, 0);
+      const result = generateInterfaceObject('Pony', interfaceMap, {}, DEFAULT_OPTIONS, 1, 0);
       
       expect(result).toHaveProperty('name');
       expect(result).toHaveProperty('tags');
@@ -117,10 +117,179 @@ describe('Mock Generator', () => {
         ]
       };
       
-      const result1 = generateInterfaceObject('Pony', interfaceMap, DEFAULT_OPTIONS, 42, 0);
-      const result2 = generateInterfaceObject('Pony', interfaceMap, DEFAULT_OPTIONS, 42, 0);
+      const result1 = generateInterfaceObject('Pony', interfaceMap, {}, DEFAULT_OPTIONS, 42, 0);
+      const result2 = generateInterfaceObject('Pony', interfaceMap, {}, DEFAULT_OPTIONS, 42, 0);
       
       expect(result1).toEqual(result2);
+    });
+  });
+
+  describe('generateEnumValue', () => {
+    it('should generate value from string enum', () => {
+      const enumDef = {
+        name: 'Status',
+        members: [
+          { name: 'ACTIVE', value: 'active' },
+          { name: 'INACTIVE', value: 'inactive' },
+          { name: 'PENDING', value: 'pending' }
+        ]
+      };
+      
+      const result = generateEnumValue(enumDef, 42);
+      expect(['active', 'inactive', 'pending']).toContain(result);
+    });
+
+    it('should generate value from numeric enum', () => {
+      const enumDef = {
+        name: 'Priority',
+        members: [
+          { name: 'LOW', value: 1 },
+          { name: 'MEDIUM', value: 2 },
+          { name: 'HIGH', value: 3 }
+        ]
+      };
+      
+      const result = generateEnumValue(enumDef, 42);
+      expect([1, 2, 3]).toContain(result);
+    });
+
+    it('should generate deterministic values with same seed', () => {
+      const enumDef = {
+        name: 'Status',
+        members: [
+          { name: 'ACTIVE', value: 'active' },
+          { name: 'INACTIVE', value: 'inactive' },
+          { name: 'PENDING', value: 'pending' }
+        ]
+      };
+      
+      const result1 = generateEnumValue(enumDef, 42);
+      const result2 = generateEnumValue(enumDef, 42);
+      expect(result1).toBe(result2);
+    });
+
+    it('should handle empty enum', () => {
+      const enumDef = {
+        name: 'EmptyEnum',
+        members: []
+      };
+      
+      const result = generateEnumValue(enumDef, 42);
+      expect(result).toBeNull();
+    });
+
+    it('should generate different values without seed', () => {
+      const enumDef = {
+        name: 'Status',
+        members: [
+          { name: 'ACTIVE', value: 'active' },
+          { name: 'INACTIVE', value: 'inactive' },
+          { name: 'PENDING', value: 'pending' }
+        ]
+      };
+      
+      const results = new Set();
+      for (let i = 0; i < 20; i++) {
+        results.add(generateEnumValue(enumDef));
+      }
+      
+      // Should generate at least 2 different values in 20 attempts
+      expect(results.size).toBeGreaterThan(1);
+      results.forEach(result => {
+        expect(['active', 'inactive', 'pending']).toContain(result);
+      });
+    });
+  });
+
+  describe('Enum Integration Tests', () => {
+    it('should generate interface with enum properties', () => {
+      const interfaceMap = {
+        Task: [
+          { name: 'id', type: 'number' },
+          { name: 'status', type: 'Status' },
+          { name: 'priority', type: 'Priority' }
+        ]
+      };
+      
+      const enumMap = {
+        Status: {
+          name: 'Status',
+          members: [
+            { name: 'ACTIVE', value: 'active' },
+            { name: 'INACTIVE', value: 'inactive' }
+          ]
+        },
+        Priority: {
+          name: 'Priority',
+          members: [
+            { name: 'LOW', value: 1 },
+            { name: 'HIGH', value: 2 }
+          ]
+        }
+      };
+      
+      const result = generateInterfaceObject('Task', interfaceMap, enumMap, DEFAULT_OPTIONS, 42, 0);
+      
+      expect(result).toHaveProperty('id');
+      expect(result).toHaveProperty('status');
+      expect(result).toHaveProperty('priority');
+      expect(typeof result.id).toBe('number');
+      expect(['active', 'inactive']).toContain(result.status);
+      expect([1, 2]).toContain(result.priority);
+    });
+
+    it('should generate array of enum values', () => {
+      const enumMap = {
+        Status: {
+          name: 'Status',
+          members: [
+            { name: 'ACTIVE', value: 'active' },
+            { name: 'INACTIVE', value: 'inactive' },
+            { name: 'PENDING', value: 'pending' }
+          ]
+        }
+      };
+      
+      const result = generateArrayValue('Status', {}, enumMap, DEFAULT_OPTIONS, 42, 0);
+      
+      expect(Array.isArray(result)).toBe(true);
+      expect(result.length).toBeGreaterThan(0);
+      result.forEach(item => {
+        expect(['active', 'inactive', 'pending']).toContain(item);
+      });
+    });
+
+    it('should generate nested interface with enum arrays', () => {
+      const interfaceMap = {
+        Project: [
+          { name: 'name', type: 'string' },
+          { name: 'statuses', type: 'Status[]' },
+          { name: 'currentStatus', type: 'Status' }
+        ]
+      };
+      
+      const enumMap = {
+        Status: {
+          name: 'Status',
+          members: [
+            { name: 'DRAFT', value: 'draft' },
+            { name: 'PUBLISHED', value: 'published' }
+          ]
+        }
+      };
+      
+      const result = generateInterfaceObject('Project', interfaceMap, enumMap, DEFAULT_OPTIONS, 42, 0);
+      
+      expect(result).toHaveProperty('name');
+      expect(result).toHaveProperty('statuses');
+      expect(result).toHaveProperty('currentStatus');
+      expect(typeof result.name).toBe('string');
+      expect(Array.isArray(result.statuses)).toBe(true);
+      expect(['draft', 'published']).toContain(result.currentStatus);
+      
+      result.statuses.forEach((status: any) => {
+        expect(['draft', 'published']).toContain(status);
+      });
     });
   });
 });

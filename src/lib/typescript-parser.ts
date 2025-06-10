@@ -1,10 +1,10 @@
 import { Project, ScriptTarget } from 'ts-morph';
-import { InterfaceDefinition, TypeDefinition, ParsedDefinitions } from '../types';
+import { InterfaceDefinition, TypeDefinition, EnumDefinition, ParsedDefinitions } from '../types';
 
 /**
- * Parses TypeScript source code and extracts interface and type definitions
+ * Parses TypeScript source code and extracts interface, type, and enum definitions
  * @param fileText - TypeScript source code
- * @returns Object containing arrays of interface and type definitions
+ * @returns Object containing arrays of interface, type, and enum definitions
  */
 export async function parseTypeScriptDefinitions(fileText: string): Promise<ParsedDefinitions> {
   const project = new Project({
@@ -36,15 +36,30 @@ export async function parseTypeScriptDefinitions(fileText: string): Promise<Pars
     kind: 'type' as const,
   }));
 
-  // Also include interfaces as TypeDefinition for consistency
+  const enums: EnumDefinition[] = sourceFile.getEnums().map((e) => ({
+    name: e.getName(),
+    members: e.getMembers().map((m) => ({
+      name: m.getName(),
+      value: m.getValue() ?? m.getName(),
+    })),
+  }));
+
+  // Also include interfaces and enums as TypeDefinition for consistency
   const interfaceTypes: TypeDefinition[] = interfaces.map((i) => ({
     name: i.name,
     type: `interface ${i.name}`,
     kind: 'interface' as const,
   }));
 
+  const enumTypes: TypeDefinition[] = enums.map((e) => ({
+    name: e.name,
+    type: `enum ${e.name}`,
+    kind: 'enum' as const,
+  }));
+
   return {
     interfaces,
-    types: [...types, ...interfaceTypes],
+    types: [...types, ...interfaceTypes, ...enumTypes],
+    enums,
   };
 }

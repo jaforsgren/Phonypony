@@ -9,12 +9,12 @@
 - 🎯 **Generate mock data directly from TypeScript interface definitions**
 - 🔧 **Configurable data generation**  
 - 💾 **Multiple output formats**
-- 🎨 **Rich type support**
-- 🚀 **Intuitive CLI interface**
-- 📦 **Programmatic API**
+- 🎨 **Rich type support including enums**
+- 🚀 **CLI interface and Programmatic API**
 - 🧪 **Comprehensive test coverage**
 - 🌱 **Deterministic seeded generation**
 - 🎪 **Self-referencing interface support**
+- 🎯 **Full enum support (string, numeric, auto-increment)**
 
 ## 🏇 Installation 🏇
 
@@ -86,6 +86,7 @@ interface Horse {
   isActive: boolean;
   createdAt: Date;
   tags: string[];
+  status: Status;
 }
 
 interface Product {
@@ -94,24 +95,44 @@ interface Product {
   price: number;
   description: string;
   category: Category;
+  priority: Priority;
 }
 
 interface Category {
   id: number;
   name: string;
 }
+
+// Enums are fully supported! 🎯
+enum Status {
+  active = "active",
+  inactive = "inactive",
+  pending = "pending"
+}
+
+enum Priority {
+  low = 1,
+  medium = 2,
+  high = 3
+}
 ```
 
-### 💻 Programmatic Usages 💻
+### 💻 Programmatic Usage 💻
 
 ```typescript
 import { generateMockData, generateAndSaveMockData } from 'phonypony';
 
 const typeScriptCode = `
+  enum Status {
+    active = "active",
+    inactive = "inactive"
+  }
+
   interface Horse {
     id: number;
     name: string;
     email: string;
+    status: Status;
   }
 `;
 
@@ -160,13 +181,62 @@ const dataset2 = await generateMockData(typeScriptCode, { count: 3, numberMax: 5
 
 *PhonyPony speaks fluent TypeScript and understands all these magnificent types:*
 
-- 🔤 `string` - Random text that flows like a pony's mane in the wind
-- 🔢 `number` - Random numbers within your specified pasture range  
-- ✅ `boolean` - Random true/false values as unpredictable as a wild mustang
-- 📅 `Date` - Random dates from across the timeline
-- 📋 Array types (e.g., `string[]`, `number[]`) - Collections as beautiful as a herd
-- 🏗️ Nested interfaces - Complex structures like a multi-level stable
-- 🔗 Custom interface references - Links as strong as the bond between rider and pony
+- 🔤 `string`
+- 🔢 `number`
+- ✅ `boolean`
+- 🎯 `enum`
+- 📋 Array types (e.g., `string[]`, `number[]`, `Status[]`)
+- 🏗️ Nested interfaces
+- 🔗 Custom interface references
+
+### 🎯 Enum Support - Choose Your Destiny 🎯
+
+```typescript
+// String enums - for when your data needs personality
+enum PonyRole {
+  admin = "admin",
+  pony = "pony", 
+  moderator = "moderator"
+}
+
+// Numeric enums - for when numbers tell the story
+enum Priority {
+  low = 1,
+  medium = 2,
+  high = 3
+}
+
+// Auto-increment enums - let TypeScript decide
+enum Size {
+  small,    // 0
+  medium,   // 1
+  large     // 2
+}
+
+interface Pony {
+  id: number;
+  name: string;
+  role: PonyRole;      // Will generate: "admin", "pony", or "moderator"
+  priority: Priority;  // Will generate: 1, 2, or 3
+  size: Size;         // Will generate: 0, 1, or 2
+}
+```
+
+*Example generated output:*
+
+```json
+{
+  "Pony": [
+    {
+      "id": 42,
+      "name": "John Doe",
+      "role": "admin",
+      "priority": 2,
+      "size": 1
+    }
+  ]
+}
+```
 
 ### 🎯 Deterministic Generation - The Magic of Reproducible Ponies 🎯
 
@@ -201,35 +271,7 @@ const dataB = await generateMockData(source, { count: 3, seed: 200 });
 
 ## 🛠️ Development - Join the Pony Dev Ranch 🛠️
 
-*Ready to contribute to the PhonyPony legacy? Here's your developer saddle:*
-
-```bash
-# Install dependencies
-npm install
-
-# Build the project
-npm run build
-
-# Run tests
-npm test
-
-# Run tests in watch mode
-npm run test:watch
-
-# Run with coverage
-npm run test:coverage
-
-# Lint code
-npm run lint
-
-# Fix linting issues
-npm run lint:fix
-
-# Development mode (with ts-node)
-npm run dev ./example-types.ts
-```
-
-## 🏗️ Project Structure - The PhonyPony Ranch Layout 🏗️
+### 🏗️ Project Structure - The PhonyPony Ranch Layout 🏗️
 
 *Here's how our beautiful stable is organized:*
 

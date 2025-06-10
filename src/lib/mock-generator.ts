@@ -1,4 +1,4 @@
-import { MemberType, GenerationOptions, InterfaceDefinition, GeneratedData } from '../types';
+import { MemberType, GenerationOptions, InterfaceDefinition, EnumDefinition, GeneratedData } from '../types';
 import { fakerUtil, setFakerSeed, resetFakerSeed } from './faker-util';
 
 export const DEFAULT_OPTIONS: GenerationOptions = {
@@ -6,6 +6,24 @@ export const DEFAULT_OPTIONS: GenerationOptions = {
   numberMax: 100,
   seed: 12345, // Default fixed seed for reproducible results
 };
+
+/**
+ * Generates a random value from an enum
+ * @param enumDef - The enum definition
+ * @param seed - Optional seed for deterministic generation
+ * @returns Random enum value
+ */
+export function generateEnumValue(enumDef: EnumDefinition, seed?: number): any {
+  if (seed !== undefined) {
+    setFakerSeed(seed);
+  }
+  
+  const members = enumDef.members;
+  if (members.length === 0) return null;
+  
+  const randomIndex = Math.floor(fakerUtil.number({ max: members.length - 1 }));
+  return members[randomIndex].value;
+}
 
 /**
  * Generates mock data for a primitive type with optional seeding
@@ -37,6 +55,7 @@ export function generatePrimitiveValue(type: string, options: GenerationOptions,
  * Generates mock data for an array type with seeding and depth limiting
  * @param arrayType - The type of array elements
  * @param interfaceMap - Map of interface definitions
+ * @param enumMap - Map of enum definitions
  * @param options - Generation options
  * @param baseSeed - Base seed for array generation
  * @param depth - Current recursion depth to prevent infinite loops
@@ -45,6 +64,7 @@ export function generatePrimitiveValue(type: string, options: GenerationOptions,
 export function generateArrayValue(
   arrayType: string,
   interfaceMap: Record<string, InterfaceDefinition['members']>,
+  enumMap: Record<string, EnumDefinition> = {},
   options: GenerationOptions,
   baseSeed?: number,
   depth: number = 0
@@ -69,7 +89,9 @@ export function generateArrayValue(
     const itemSeed = baseSeed !== undefined ? baseSeed + i + 100 : undefined;
     
     if (interfaceMap[arrayType]) {
-      result.push(generateInterfaceObject(arrayType, interfaceMap, options, itemSeed, depth + 1));
+      result.push(generateInterfaceObject(arrayType, interfaceMap, enumMap, options, itemSeed, depth + 1));
+    } else if (enumMap[arrayType]) {
+      result.push(generateEnumValue(enumMap[arrayType], itemSeed));
     } else {
       result.push(generatePrimitiveValue(arrayType, options, itemSeed));
     }
@@ -81,6 +103,7 @@ export function generateArrayValue(
  * Generates mock data for an interface object with seeding and depth limiting
  * @param interfaceName - Name of the interface
  * @param interfaceMap - Map of interface definitions
+ * @param enumMap - Map of enum definitions
  * @param options - Generation options
  * @param baseSeed - Base seed for object generation
  * @param depth - Current recursion depth to prevent infinite loops
@@ -89,6 +112,7 @@ export function generateArrayValue(
 export function generateInterfaceObject(
   interfaceName: string,
   interfaceMap: Record<string, InterfaceDefinition['members']>,
+  enumMap: Record<string, EnumDefinition> = {},
   options: GenerationOptions,
   baseSeed?: number,
   depth: number = 0
@@ -109,9 +133,11 @@ export function generateInterfaceObject(
     
     if (memberType.endsWith('[]')) {
       const arrayType = memberType.slice(0, -2);
-      result[member.name] = generateArrayValue(arrayType, interfaceMap, options, memberSeed, depth + 1);
+      result[member.name] = generateArrayValue(arrayType, interfaceMap, enumMap, options, memberSeed, depth + 1);
     } else if (interfaceMap[memberType]) {
-      result[member.name] = generateInterfaceObject(memberType, interfaceMap, options, memberSeed, depth + 1);
+      result[member.name] = generateInterfaceObject(memberType, interfaceMap, enumMap, options, memberSeed, depth + 1);
+    } else if (enumMap[memberType]) {
+      result[member.name] = generateEnumValue(enumMap[memberType], memberSeed);
     } else {
       result[member.name] = generatePrimitiveValue(memberType, options, memberSeed);
     }

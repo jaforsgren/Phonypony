@@ -17,10 +17,16 @@ export async function generateMockData(
 ): Promise<GeneratedData[]> {
   const result = await parseTypeScriptDefinitions(source);
   const interfaces = result.interfaces;
+  const enums = result.enums;
   const interfaceMap: Record<string, any> = {};
+  const enumMap: Record<string, any> = {};
   
   interfaces.forEach(item => {
     interfaceMap[item.name] = item.members;
+  });
+
+  enums.forEach(item => {
+    enumMap[item.name] = item;
   });
 
   const baseSeed = options.seed ?? DEFAULT_OPTIONS.seed ?? 12345;
@@ -32,7 +38,7 @@ export async function generateMockData(
       const instanceSeed = baseSeed + interfaceIndex * 1000 + instanceIndex;
       setFakerSeed(instanceSeed);
       
-      const result = generateInterfaceObject(interfaceDef.name, interfaceMap, options, instanceSeed, 0);
+      const result = generateInterfaceObject(interfaceDef.name, interfaceMap, enumMap, options, instanceSeed, 0);
       
       resetFakerSeed();
       
