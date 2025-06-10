@@ -3,4 +3,5 @@ export { generateMockData, generateAndSaveMockData } from './lib/mock-data-servi
 export { parseTypeScriptDefinitions } from './lib/typescript-parser';
 export { fakerUtil, setFakerSeed, resetFakerSeed } from './lib/faker-util';
 export { generatePrimitiveValue, generateArrayValue, generateInterfaceObject, DEFAULT_OPTIONS } from './lib/mock-generator';
+export { analyzeFunctionAndGenerateMock, FunctionAnalysisResult, ImportInfo } from './lib/function-analyzer';
 export * from './types';

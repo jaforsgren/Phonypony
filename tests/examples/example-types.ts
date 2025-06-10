@@ -1,5 +1,3 @@
-// Example TypeScript interfaces for testing PhonyPony
-
 interface Pony {
   id: number;
   name: string;

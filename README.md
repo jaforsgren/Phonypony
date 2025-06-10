@@ -74,49 +74,6 @@ Options:
   -h, --help          Show help message
 ```
 
-### 🦄 Example TypeScript Interfaces 🦄
-
-Some majestic interface specimens from our TypeScript stable:*
-
-```typescript
-interface Horse {
-  id: number;
-  name: string;
-  email: string;
-  isActive: boolean;
-  createdAt: Date;
-  tags: string[];
-  status: Status;
-}
-
-interface Product {
-  id: number;
-  title: string;
-  price: number;
-  description: string;
-  category: Category;
-  priority: Priority;
-}
-
-interface Category {
-  id: number;
-  name: string;
-}
-
-// Enums are fully supported! 🎯
-enum Status {
-  active = "active",
-  inactive = "inactive",
-  pending = "pending"
-}
-
-enum Priority {
-  low = 1,
-  medium = 2,
-  high = 3
-}
-```
-
 ### 💻 Programmatic Usage 💻
 
 ```typescript
@@ -149,6 +106,123 @@ const dataset1 = await generateMockData(typeScriptCode, { count: 3, numberMax: 5
 const dataset2 = await generateMockData(typeScriptCode, { count: 3, numberMax: 50, seed: 100 });
 // dataset1 and dataset2 will have different but reproducible data
 ```
+
+## 🔍 Function Analyzer 🔍
+
+*Analyze TypeScript functions and automatically generate mock data for their return types!* 
+
+The Function Analyzer can take any TypeScript function and automatically deduce its return type, find related interface definitions, and generate realistic mock data - perfect for testing and development.
+
+### 🎯 Basic Usage 🎯
+
+```typescript
+import { analyzeFunctionAndGenerateMock } from 'phonypony';
+
+// Example 1: Simple function with interface return type
+const functionCode = `
+  interface User {
+    id: number;
+    name: string;
+    email: string;
+    isActive: boolean;
+  }
+  
+  function getUser(id: number): User {
+    return {
+      id,
+      name: "John Doe", 
+      email: "john@example.com",
+      isActive: true
+    };
+  }
+`;
+
+const result = await analyzeFunctionAndGenerateMock(functionCode, 'getUser');
+console.log(result.returnType); // "User"
+console.log(result.mockData);   // Generated User object
+```
+
+### 🏗️ Advanced Examples 🏗️
+
+```typescript
+// Example 2: Array return types
+const arrayFunction = `
+  interface Product {
+    id: number;
+    name: string;
+    price: number;
+  }
+  
+  function getProducts(): Product[] {
+    return [];
+  }
+`;
+
+const arrayResult = await analyzeFunctionAndGenerateMock(
+  arrayFunction, 
+  'getProducts', 
+  { count: 5, numberMax: 1000 }
+);
+// Returns array of 5 mock Product objects
+
+// Example 3: Arrow functions and methods
+const arrowFunction = `
+  interface ApiResponse {
+    data: string;
+    status: number;
+    timestamp: Date;
+  }
+  
+  const fetchData = (): ApiResponse => {
+    return { data: "test", status: 200, timestamp: new Date() };
+  };
+  
+  class ApiService {
+    getData(): ApiResponse {
+      return fetchData();
+    }
+  }
+`;
+
+// Analyze arrow function
+const arrowResult = await analyzeFunctionAndGenerateMock(arrowFunction, 'fetchData');
+
+// Analyze class method  
+const methodResult = await analyzeFunctionAndGenerateMock(arrowFunction, 'getData');
+```
+
+### 🎪 Function Analyzer API 🎪
+
+**`analyzeFunctionAndGenerateMock(source, functionName?, options?, baseDir?)`**
+
+**Parameters:**
+- `source` (string): TypeScript source code or file path containing the function
+- `functionName` (string, optional): Name of function to analyze (auto-detects if only one function)
+- `options` (GenerationOptions, optional): Mock data generation options
+- `baseDir` (string, optional): Base directory for resolving imports (when analyzing files)
+
+**Returns:** `Promise<FunctionAnalysisResult>`
+
+```typescript
+interface FunctionAnalysisResult {
+  returnType: string;           // The detected return type
+  sourceFile?: string;          // Source file path (if analyzing from file)
+  imports: ImportInfo[];        // Detected import statements
+  mockData: any;               // Generated mock data
+}
+```
+
+### 🌟 Supported Function Types 🌟
+
+- ✅ Regular functions (`function getName(): string`)
+- ✅ Arrow functions (`const getName = (): string => {}`)
+- ✅ Class methods (`class User { getName(): string {} }`)
+- ✅ Functions with primitive return types (`string`, `number`, `boolean`)
+- ✅ Functions returning arrays (`string[]`, `User[]`)
+- ✅ Functions returning interfaces and types
+- ✅ Functions with enum return types
+- ✅ Auto-detection when function name not specified
+- ✅ Import resolution for external types (coming soon!)
 
 ## 🎭 Royal Stable Commands 🎭
 
