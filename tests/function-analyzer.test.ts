@@ -1,5 +1,22 @@
 import { analyzeFunctionAndGenerateMock } from '../src/lib/function-analyzer';
 import { DEFAULT_OPTIONS } from '../src/lib/mock-generator';
+import { mockFromFunction, withSourceContext, mockFromFunctionEnhanced, mockFromFunctionAuto } from '../src/lib/runtime-function-analyzer';
+
+interface TestUser {
+  id: number;
+  name: string;
+  email: string;
+  active: boolean;
+}
+
+function getTestAutoDiscoveryUser(): TestUser {
+  return {
+    id: 1,
+    name: "John",
+    email: "john@example.com", 
+    active: true
+  };
+}
 
 describe('Function Analyzer', () => {
   
@@ -199,7 +216,6 @@ describe('Function Analyzer', () => {
       
       const result = await analyzeFunctionAndGenerateMock(functionSource, 'getInferredData');
       
-      // The function should still work even with inferred return types
       expect(result.mockData).toBeDefined();
     });
   });
@@ -226,4 +242,97 @@ describe('Function Analyzer', () => {
       expect(result.imports[1].isRelative).toBe(true);
     });
   });
+  
+  describe('New Runtime API vs Original String API', () => {
+    
+    it('should produce equivalent results using both APIs', async () => {
+      const functionSource = `
+        function getName(): string {
+          return "test";
+        }
+      `;
+      
+      const originalResult = await analyzeFunctionAndGenerateMock(functionSource, 'getName');
+      
+      function getName(): string {
+        return "test";
+      }
+      
+      const sourceContext = `
+        function getName(): string {
+          return "test";
+        }
+      `;
+      
+      const wrappedFunction = withSourceContext(getName, sourceContext);
+      const newApiMock = await mockFromFunctionEnhanced(wrappedFunction);
+      
+      expect(originalResult.returnType).toBe('string');
+      expect(typeof originalResult.mockData).toBe('string');
+      expect(typeof newApiMock).toBe('string');
+    });
+    
+    it('should handle complex types equivalently', async () => {
+      const functionSource = `
+        interface User {
+          id: number;
+          name: string;
+          email: string;
+          active: boolean;
+        }
+        
+        function getUser(): User {
+          return {
+            id: 1,
+            name: "John",
+            email: "john@example.com",
+            active: true
+          };
+        }
+      `;
+      
+      const originalResult = await analyzeFunctionAndGenerateMock(functionSource, 'getUser');
+      
+      function getUser() {
+        return {
+          id: 1,
+          name: "John",
+          email: "john@example.com", 
+          active: true
+        };
+      }
+      
+      const wrappedFunction = withSourceContext(getUser, functionSource);
+      const newApiMock = await mockFromFunctionEnhanced(wrappedFunction);
+      
+      expect(originalResult.returnType).toBe('User');
+      expect(originalResult.mockData).toHaveProperty('id');
+      expect(originalResult.mockData).toHaveProperty('name');
+      expect(originalResult.mockData).toHaveProperty('email');
+      expect(originalResult.mockData).toHaveProperty('active');
+      
+      expect(newApiMock).toHaveProperty('id');
+      expect(newApiMock).toHaveProperty('name');
+      expect(newApiMock).toHaveProperty('email');
+      expect(newApiMock).toHaveProperty('active');
+      expect(typeof newApiMock.id).toBe('number');
+      expect(typeof newApiMock.name).toBe('string');
+      expect(typeof newApiMock.email).toBe('string');
+      expect(typeof newApiMock.active).toBe('boolean');
+    });
+    
+  });    it('should demonstrate the ultimate simplified API', async () => {
+      const autoMock = await mockFromFunctionAuto(getTestAutoDiscoveryUser, {
+        searchDir: __dirname 
+      });
+      
+      expect(autoMock).toHaveProperty('id');
+      expect(autoMock).toHaveProperty('name');
+      expect(autoMock).toHaveProperty('email');
+      expect(autoMock).toHaveProperty('active');
+      expect(typeof autoMock.id).toBe('number');
+      expect(typeof autoMock.name).toBe('string');
+      expect(typeof autoMock.email).toBe('string');
+      expect(typeof autoMock.active).toBe('boolean');
+    });
 });
