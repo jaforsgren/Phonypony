@@ -1,5 +1,6 @@
 import { MemberType, GenerationOptions, InterfaceDefinition, EnumDefinition, GeneratedData } from '../types';
 import { fakerUtil, setFakerSeed, resetFakerSeed } from './faker-util';
+import { generatePrimitiveValueFromType } from './function-analyzer';
 
 export const DEFAULT_OPTIONS: GenerationOptions = {
   count: 1,
@@ -30,25 +31,11 @@ export function generateEnumValue(enumDef: EnumDefinition, seed?: number): any {
  * @param type - The primitive type
  * @param options - Generation options
  * @param seed - Optional seed for this specific value
+ * @param fieldName - Optional field name for context-aware generation
  * @returns Mock data value
  */
-export function generatePrimitiveValue(type: string, options: GenerationOptions, seed?: number): any {
-  if (seed !== undefined) {
-    setFakerSeed(seed);
-  }
-  
-  switch (type) {
-    case MemberType.STRING:
-      return fakerUtil.text();
-    case MemberType.NUMBER:
-      return fakerUtil.number({ max: options.numberMax });
-    case MemberType.BOOLEAN:
-      return fakerUtil.boolean();
-    case MemberType.DATE:
-      return fakerUtil.datetime();
-    default:
-      return fakerUtil.string();
-  }
+export function generatePrimitiveValue(type: string, options: GenerationOptions, seed?: number, fieldName?: string): any {
+  return generatePrimitiveValueFromType(type, options, seed, fieldName);
 }
 
 /**
@@ -59,6 +46,7 @@ export function generatePrimitiveValue(type: string, options: GenerationOptions,
  * @param options - Generation options
  * @param baseSeed - Base seed for array generation
  * @param depth - Current recursion depth to prevent infinite loops
+ * @param fieldName - Optional field name for context-aware generation
  * @returns Mock array data
  */
 export function generateArrayValue(
@@ -67,7 +55,8 @@ export function generateArrayValue(
   enumMap: Record<string, EnumDefinition> = {},
   options: GenerationOptions,
   baseSeed?: number,
-  depth: number = 0
+  depth: number = 0,
+  fieldName?: string
 ): any[] {
   // Limit recursion depth to prevent infinite loops with self-referencing interfaces
   if (depth > 3) {
@@ -93,7 +82,7 @@ export function generateArrayValue(
     } else if (enumMap[arrayType]) {
       result.push(generateEnumValue(enumMap[arrayType], itemSeed));
     } else {
-      result.push(generatePrimitiveValue(arrayType, options, itemSeed));
+      result.push(generatePrimitiveValue(arrayType, options, itemSeed, fieldName));
     }
   }
   return result;
@@ -133,13 +122,13 @@ export function generateInterfaceObject(
     
     if (memberType.endsWith('[]')) {
       const arrayType = memberType.slice(0, -2);
-      result[member.name] = generateArrayValue(arrayType, interfaceMap, enumMap, options, memberSeed, depth + 1);
+      result[member.name] = generateArrayValue(arrayType, interfaceMap, enumMap, options, memberSeed, depth + 1, member.name);
     } else if (interfaceMap[memberType]) {
       result[member.name] = generateInterfaceObject(memberType, interfaceMap, enumMap, options, memberSeed, depth + 1);
     } else if (enumMap[memberType]) {
       result[member.name] = generateEnumValue(enumMap[memberType], memberSeed);
     } else {
-      result[member.name] = generatePrimitiveValue(memberType, options, memberSeed);
+      result[member.name] = generatePrimitiveValue(memberType, options, memberSeed, member.name);
     }
   }
   return result;

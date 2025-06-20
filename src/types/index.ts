@@ -60,4 +60,14 @@ export interface FakerUtilMethods {
   fullName: () => string;
   price: () => string;
   sentence: () => string;
+  phoneNumber: () => string;
+  country: () => string;
+  address: () => string;
+  city: () => string;
+  url: () => string;
+  email: () => string;
+  zipCode: () => string;
+  state: () => string;
+  title: () => string;
+  uuid: () => string;
 }

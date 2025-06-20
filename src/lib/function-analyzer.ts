@@ -5,6 +5,9 @@ import { GenerationOptions } from '../types';
 import * as fs from 'fs';
 import * as path from 'path';
 
+import { fakerUtil, setFakerSeed } from './faker-util';
+
+
 export interface FunctionAnalysisResult {
   returnType: string;
   sourceFile?: string;
@@ -233,7 +236,6 @@ async function generateMockDataForReturnType(
   }
   
   // For complex types, we need to parse the type definitions from the same source
-  // First, try to parse from the current source (inline interfaces)
   const currentSourceResult = await parseTypeScriptDefinitions(getCurrentSourceForParsing());
   
   // Check if the type is defined in the current source
@@ -285,20 +287,16 @@ function isPrimitiveType(typeName: string): boolean {
 }
 
 function extractBaseTypeName(typeText: string): string {
-  // Remove array notation
   let baseName = typeText.replace('[]', '').replace(/Array<(.+)>/, '$1');
   
-  // Handle union types (take the first type for now)
   if (baseName.includes('|')) {
     baseName = baseName.split('|')[0].trim();
   }
   
-  // Handle generic types - extract the main type name
   if (baseName.includes('<')) {
     baseName = baseName.split('<')[0];
   }
   
-  // Handle Promise types
   if (baseName.startsWith('Promise<') && baseName.endsWith('>')) {
     baseName = baseName.slice(8, -1);
   }
@@ -362,14 +360,59 @@ function resolveImportPath(importPath: string, baseDir: string): string {
   return path.resolve(baseDir, importPath + '.ts');
 }
 
-function generatePrimitiveValueFromType(typeText: string): any {
-  const { fakerUtil } = require('./faker-util');
+function generateCustomPrimitiveValueFromName(fieldName: string): any {
+  switch (fieldName.toLowerCase()) {
+    case 'name':
+      return fakerUtil.fullName();
+    case 'email':
+      return fakerUtil.email();
+    case 'phone':
+      return fakerUtil.phoneNumber();
+    case 'address':
+    case 'street':
+      return fakerUtil.address();
+    case 'country':
+      return fakerUtil.country();
+    case 'city': 
+      return fakerUtil.city();
+    case 'zip':
+    case 'postalcode':
+    case 'zipcode':
+      return fakerUtil.zipCode();
+    case 'state':
+    case 'region':
+    case 'province':
+      return fakerUtil.state();
+    case 'url':
+    case 'website':
+      return fakerUtil.url();
+    case 'uuid':
+      return fakerUtil.uuid();
+    case 'title':
+      return fakerUtil.title();
+    default:
+      return fakerUtil.string();
+  }
+}
+
+export function generatePrimitiveValueFromType(typeText: string, options?: GenerationOptions, seed?: number, fieldName?: string): any {
+
+  console.log(`Generating primitive value for type: ${typeText}, field: ${fieldName}`);
+  if (seed !== undefined) {
+    setFakerSeed(seed);
+  }
+
   
   switch (typeText.toLowerCase()) {
     case 'string':
+      // Check if field name indicates it should be a full name
+      if (fieldName) {
+        const value = generateCustomPrimitiveValueFromName(fieldName);
+        if (value) return value;
+      }
       return fakerUtil.string();
     case 'number':
-      return fakerUtil.number({ max: 100 });
+      return fakerUtil.number({ max: options?.numberMax || 100 });
     case 'boolean':
       return fakerUtil.boolean();
     case 'date':
