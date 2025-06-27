@@ -1,4 +1,10 @@
 // Main library exports for programmatic use
+// This file exports the main API along with all underlying functionality
+
+// Export the main API
+export * from './api';
+
+// Legacy exports for backward compatibility
 export { generateMockData, generateAndSaveMockData } from './lib/mock-data-service';
 export { parseTypeScriptDefinitions } from './lib/typescript-parser';
 export { fakerUtil, setFakerSeed, resetFakerSeed } from './lib/faker-util';
@@ -6,7 +12,7 @@ export { generatePrimitiveValue, generateArrayValue, generateInterfaceObject, DE
 export { analyzeFunctionAndGenerateMock, FunctionAnalysisResult, ImportInfo } from './lib/function-analyzer';
 export { 
   mockFromFunction, 
-  analyzeFunction, 
+  analyzeFunction as analyzeRuntimeFunction, 
   withSourceContext, 
   mockFromFunctionEnhanced,
   mockFromFunctionAuto,
