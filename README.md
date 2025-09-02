@@ -2,7 +2,7 @@
 
 *A TypeScript tool for generating p(h)ony data from TypeScript interfaces using Faker.js.*
 
-🎠 **Saddle up for the most mane-ificent mock data generator in the stable** 🎠
+🎠 **The most mane-ificent mock data generator in the world** 🎠
 
 ## ✨ Features ✨
 
@@ -11,8 +11,7 @@
 - 💾 **Multiple output formats**
 - 🎨 **Rich type support including enums**
 - 🚀 **CLI interface and Programmatic API**
-- 🧪 **Comprehensive test coverage**
-- 🌱 **Deterministic seeded generation**
+= 🌱 **Deterministic seeded generation**
 - 🎪 **Self-referencing interface support**
 - 🎯 **Full enum support (string, numeric, auto-increment)**
 
@@ -21,20 +20,20 @@
 Ready to join the PhonyPony ranch?
 
 ```bash
-# Global installation - for adventurous cowboys and cowgirls
+# for adventurous cowboys and girls
 npm install -g phonypony
 ```
 
 Or wrangle it locally in your project:
 
 ```bash
-# Local installation - perfect for your own stable
+# Local instable-llation
 npm install phonypony
 ```
 
 ## 🌈 Usage 🌈
 
-### 🎠 CLI Usage - Ride Like the Wind 🎠
+### 🎠 CLI Usage  🎠
 
 ```bash
 # Generate mock data from a TypeScript file 
@@ -74,142 +73,72 @@ Options:
   -h, --help          Show help message
 ```
 
-### 💻 Programmatic Usage 💻
+### 💻 Programmatic API (Types, Functions, Runtime) 💻
 
 ```typescript
-import { generateMockData, generateAndSaveMockData } from 'phonypony';
+import {
+  // Source-based (types/interfaces)
+  generateFromSource,
+  mockFromSource, // name -> data[] map
 
-const typeScriptCode = `
-  enum Status {
-    active = "active",
-    inactive = "inactive"
-  }
+  // Runtime function analysis
+  mockFromFunction,
+  generateFromFunctionEnhanced,
+  generateFromFunctionAuto,
+  generateFromFunctionSmart,
+  createWithSourceContext,
 
-  interface Horse {
-    id: number;
-    name: string;
-    email: string;
-    status: Status;
-  }
+  // Low-level
+  analyzeFunctionAndGenerateMock,
+  parseDefinitions,
+  DEFAULT_OPTIONS
+} from 'phonypony';
+
+// 1) Generate from TypeScript source (interfaces/types)
+const source = `
+  interface Pony { id: number; name: string; email: string }
+  interface Product { id: number; title: string; price: number }
 `;
 
-// Generate mock data in memory
-const options = { count: 5, numberMax: 100, seed: 12345 };
-const mockData = await generateMockData(typeScriptCode, options);
-console.log(mockData);
+const list = await generateFromSource(source, { count: 2, seed: 42 });
+// list: Array<{ name: string; data: any[] }>
 
-// Generate and save to file
-await generateAndSaveMockData(typeScriptCode, options, './output.json');
+const map = await mockFromSource(source, { count: 2, seed: 42 });
+// map: { Pony: any[]; Product: any[] }
 
-// Use different seeds for different datasets
-const dataset1 = await generateMockData(typeScriptCode, { count: 3, numberMax: 50, seed: 42 });
-const dataset2 = await generateMockData(typeScriptCode, { count: 3, numberMax: 50, seed: 100 });
-// dataset1 and dataset2 will have different but reproducible data
-```
+const examplePath = path.resolve(__dirname, 'examples/example-types.ts');
+const map = await mockFromSource(examplePath, { count: 3, numberMax: 50, seed: 42 });
+// map: { Pony: any[]; Product: any[] }
 
-## 🔍 Function Analyzer 🔍
-
-*Analyze TypeScript functions and automatically generate mock data for their return types!* 
-
-The Function Analyzer can take any TypeScript function and automatically deduce its return type, find related interface definitions, and generate realistic mock data - perfect for testing and development.
-
-### 🎯 Basic Usage 🎯
-
-```typescript
-import { analyzeFunctionAndGenerateMock } from 'phonypony';
-
-// Example 1: Simple function with interface return type
-const functionCode = `
-  interface User {
-    id: number;
-    name: string;
-    email: string;
-    isActive: boolean;
-  }
-  
-  function getUser(id: number): User {
-    return {
-      id,
-      name: "John Doe", 
-      email: "john@example.com",
-      isActive: true
-    };
-  }
-`;
-
-const result = await analyzeFunctionAndGenerateMock(functionCode, 'getUser');
-console.log(result.returnType); // "User"
-console.log(result.mockData);   // Generated User object
-```
-
-### 🏗️ Advanced Examples 🏗️
-
-```typescript
-// Example 2: Array return types
-const arrayFunction = `
-  interface Product {
-    id: number;
-    name: string;
-    price: number;
-  }
-  
-  function getProducts(): Product[] {
-    return [];
-  }
-`;
-
-const arrayResult = await analyzeFunctionAndGenerateMock(
-  arrayFunction, 
-  'getProducts', 
-  { count: 5, numberMax: 1000 }
-);
-// Returns array of 5 mock Product objects
-
-// Example 3: Arrow functions and methods
-const arrowFunction = `
-  interface ApiResponse {
-    data: string;
-    status: number;
-    timestamp: Date;
-  }
-  
-  const fetchData = (): ApiResponse => {
-    return { data: "test", status: 200, timestamp: new Date() };
-  };
-  
-  class ApiService {
-    getData(): ApiResponse {
-      return fetchData();
-    }
-  }
-`;
-
-// Analyze arrow function
-const arrowResult = await analyzeFunctionAndGenerateMock(arrowFunction, 'fetchData');
-
-// Analyze class method  
-const methodResult = await analyzeFunctionAndGenerateMock(arrowFunction, 'getData');
-```
-
-### 🎪 Function Analyzer API 🎪
-
-**`analyzeFunctionAndGenerateMock(source, functionName?, options?, baseDir?)`**
-
-**Parameters:**
-- `source` (string): TypeScript source code or file path containing the function
-- `functionName` (string, optional): Name of function to analyze (auto-detects if only one function)
-- `options` (GenerationOptions, optional): Mock data generation options
-- `baseDir` (string, optional): Base directory for resolving imports (when analyzing files)
-
-**Returns:** `Promise<FunctionAnalysisResult>`
-
-```typescript
-interface FunctionAnalysisResult {
-  returnType: string;           // The detected return type
-  sourceFile?: string;          // Source file path (if analyzing from file)
-  imports: ImportInfo[];        // Detected import statements
-  mockData: any;               // Generated mock data
+// 2) Runtime: generate from actual JS functions
+function getUser() {
+  return { id: 1, name: 'John', email: 'john@example.com' };
 }
+
+const withCtx = createWithSourceContext(
+  getUser,
+  `
+    interface User { id: number; name: string; email: string }
+    function getUser(): User { return { id: 1, name: 'John', email: 'john@example.com' } }
+  `
+);
+
+const mock1 = await generateFromFunctionEnhanced(withCtx);
+
+// Auto-discovery (finds function definition in your TS files by name)
+const mock2 = await generateFromFunctionAuto(getUser, { searchDir: process.cwd(), count: 1 });
+
+// Smart: try auto first, then fall back to provided source context
+const mock3 = await generateFromFunctionSmart(withCtx, { searchDir: process.cwd(), count: 1 });
+
+// 3) Low-level (analyze a function from source text or file path)
+const res = await analyzeFunctionAndGenerateMock(source, 'getUser', DEFAULT_OPTIONS);
+// res.returnType, res.mockData, res.imports
+
+// 4) Parse only types
+const defs = await parseDefinitions(source);
+// defs.interfaces, defs.types, defs.enums
+
 ```
 
 ### 🌟 Supported Function Types 🌟
@@ -224,7 +153,7 @@ interface FunctionAnalysisResult {
 - ✅ Auto-detection when function name not specified
 - ✅ Import resolution for external types (coming soon!)
 
-## 🎭 Royal Stable Commands 🎭
+## 🎭 Stable Commands 🎭
 
 ### ✨ `generateMockData(source, options?)` ✨
 
@@ -266,21 +195,18 @@ interface FunctionAnalysisResult {
 ### 🎯 Enum Support - Choose Your Destiny 🎯
 
 ```typescript
-// String enums - for when your data needs personality
 enum PonyRole {
   admin = "admin",
   pony = "pony", 
   moderator = "moderator"
 }
 
-// Numeric enums - for when numbers tell the story
 enum Priority {
   low = 1,
   medium = 2,
   high = 3
 }
 
-// Auto-increment enums - let TypeScript decide
 enum Size {
   small,    // 0
   medium,   // 1
@@ -312,12 +238,12 @@ interface Pony {
 }
 ```
 
-### 🎯 Deterministic Generation - The Magic of Reproducible Ponies 🎯
+### 🎯The Magic of Reproducible Ponies (Deterministic Generation) 🎯
 
 *One of PhonyPony's most magical features is its ability to generate **exactly the same data** every time with seeded generation*
 
-🌱 Every run uses seed `12345` by default - your data will be identical across runs
-🎲 Use `--seed` flag or `seed` option for different but perfectly reproducible datasets
+🌱 Every run uses seed `12345` by default, your data will be identical across runs
+🎲 Use `--seed` flag or `seed` option for different but reproducible datasets
 🧬 Each instance gets a unique seed based on interface index and instance index
 🔄 Same seed + same options = identical output every single time
 🏰 Even deeply nested objects and arrays maintain deterministic behavior
@@ -341,30 +267,6 @@ const data2 = await generateMockData(source, { count: 3, seed: 42 });
 const dataA = await generateMockData(source, { count: 3, seed: 100 });
 const dataB = await generateMockData(source, { count: 3, seed: 200 });
 // dataA !== dataB, but both are reproducible
-```
-
-## 🛠️ Development - Join the Pony Dev Ranch 🛠️
-
-### 🏗️ Project Structure - The PhonyPony Ranch Layout 🏗️
-
-*Here's how our beautiful stable is organized:*
-
-```text
-src/
-├── index.ts              # CLI entry point - The main gate to our ranch
-├── lib.ts                # Library exports - The trading post
-├── types/
-│   └── index.ts          # Type definitions - The pony breed registry
-└── lib/
-    ├── faker-util.ts     # Faker.js utilities - The magic feed
-    ├── mock-generator.ts # Core mock generation logic - The pony training ground
-    ├── mock-data-service.ts # Main service - The stable master
-    └── typescript-parser.ts # TypeScript AST parsing - The pony whisperer
-tests/
-├── mock-generator.test.ts        # Testing the training ground
-├── typescript-parser.test.ts     # Testing the whisperer
-├── mock-data-service.test.ts     # Testing the stable master
-└── deterministic-generation.test.ts # Testing our magical reproducibility
 ```
 
 ---

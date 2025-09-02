@@ -19,5 +19,5 @@ export {
   mockFromFunctionSmart,
   RuntimeAnalysisOptions,
   AutoDiscoveryOptions
-} from './lib/runtime-function-analyzer';
+} from './lib/function-analyzer';
 export * from './types';

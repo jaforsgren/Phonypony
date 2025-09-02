@@ -1,4 +1,4 @@
-import { mockFromFunction, analyzeFunction, withSourceContext, mockFromFunctionEnhanced } from '../src/lib/runtime-function-analyzer';
+import { mockFromFunction, analyzeFunction, withSourceContext, mockFromFunctionEnhanced } from '../src/lib/function-analyzer';
 import { DEFAULT_OPTIONS } from '../src/lib/mock-generator';
 
 describe('Runtime Function Analyzer', () => {

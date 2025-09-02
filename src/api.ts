@@ -8,14 +8,14 @@ import { generateMockData, generateAndSaveMockData } from './lib/mock-data-servi
 import { analyzeFunctionAndGenerateMock, FunctionAnalysisResult } from './lib/function-analyzer';
 import { 
   mockFromFunction, 
-  analyzeFunction, 
+  analyzeFunction as analyzeRuntimeFunction, 
   withSourceContext, 
   mockFromFunctionEnhanced,
   mockFromFunctionAuto,
   mockFromFunctionSmart,
   RuntimeAnalysisOptions,
   AutoDiscoveryOptions
-} from './lib/runtime-function-analyzer';
+} from './lib/function-analyzer';
 import { parseTypeScriptDefinitions } from './lib/typescript-parser';
 import { DEFAULT_OPTIONS } from './lib/mock-generator';
 import { GenerationOptions, GeneratedData, ParsedDefinitions } from './types';
@@ -26,13 +26,10 @@ import * as path from 'path';
 export { 
   GenerationOptions, 
   GeneratedData, 
-  ParsedDefinitions, 
-  FunctionAnalysisResult, 
-  RuntimeAnalysisOptions,
-  AutoDiscoveryOptions 
+  ParsedDefinitions
 } from './types';
 export { FunctionAnalysisResult } from './lib/function-analyzer';
-export { RuntimeAnalysisOptions, AutoDiscoveryOptions } from './lib/runtime-function-analyzer';
+export { RuntimeAnalysisOptions, AutoDiscoveryOptions } from './lib/function-analyzer';
 
 /**
  * API Options that extend GenerationOptions with file I/O options
@@ -106,7 +103,8 @@ export class PhonyPonyAPI {
     // Determine if input is a file path or source code
     if (fs.existsSync(sourceOrPath)) {
       source = fs.readFileSync(sourceOrPath, 'utf-8');
-    } else {
+    } 
+    else {
       source = sourceOrPath;
     }
     
@@ -282,6 +280,21 @@ export async function generateFromSource(
 }
 
 /**
+ * Convenience wrapper that returns a name->data map
+ */
+export async function mockFromSource(
+  sourceOrPath: string,
+  options: Partial<APIOptions> = {}
+): Promise<Record<string, any[]>> {
+  const items = await api.generateFromSource(sourceOrPath, options);
+  const result: Record<string, any[]> = {};
+  for (const item of items) {
+    result[item.name] = item.data;
+  }
+  return result;
+}
+
+/**
  * Analyze a function and generate mock data for its return type
  * @param functionSourceOrPath - Function source code or file path
  * @param functionName - Name of the function to analyze (optional)
@@ -391,7 +404,7 @@ export {
   mockFromFunctionEnhanced,
   mockFromFunctionAuto,
   mockFromFunctionSmart 
-} from './lib/runtime-function-analyzer';
+} from './lib/function-analyzer';
 
 export { 
   parseTypeScriptDefinitions 

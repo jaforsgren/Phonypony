@@ -5,7 +5,7 @@
  * instead of passing string source code.
  */
 
-import { mockFromFunction, withSourceContext, mockFromFunctionEnhanced } from '../src/lib/runtime-function-analyzer';
+import { mockFromFunction, withSourceContext, mockFromFunctionEnhanced } from '../src/lib/function-analyzer';
 
 // Define some TypeScript interfaces and functions
 const sourceContext = `
