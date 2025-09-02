@@ -22,28 +22,28 @@ describe('Function Analyzer', () => {
   
   describe('analyzeFunctionAndGenerateMock', () => {
     
-    it('should analyze a function with primitive return type', async () => {
+    it('should analyze a function with primitive return type', () => {
       const functionSource = `
         function getName(): string {
           return "test";
         }
       `;
       
-      const result = await analyzeFunctionAndGenerateMock(functionSource, 'getName');
+      const result = analyzeFunctionAndGenerateMock(functionSource, 'getName');
       
       expect(result.returnType).toBe('string');
       expect(typeof result.mockData).toBe('string');
       expect(result.imports).toEqual([]);
     });
     
-    it('should analyze a function with array return type', async () => {
+    it('should analyze a function with array return type', () => {
       const functionSource = `
         function getNumbers(): number[] {
           return [1, 2, 3];
         }
       `;
       
-      const result = await analyzeFunctionAndGenerateMock(functionSource, 'getNumbers', { count: 3, numberMax: 100 });
+      const result = analyzeFunctionAndGenerateMock(functionSource, 'getNumbers', { count: 3, numberMax: 100 });
       
       expect(result.returnType).toBe('number[]');
       expect(Array.isArray(result.mockData)).toBe(true);
@@ -51,7 +51,7 @@ describe('Function Analyzer', () => {
       expect(typeof result.mockData[0]).toBe('number');
     });
     
-    it('should analyze a function with interface return type', async () => {
+    it('should analyze a function with interface return type', () => {
       const functionSource = `
         interface User {
           id: number;
@@ -70,7 +70,7 @@ describe('Function Analyzer', () => {
         }
       `;
       
-      const result = await analyzeFunctionAndGenerateMock(functionSource, 'getUser');
+      const result = analyzeFunctionAndGenerateMock(functionSource, 'getUser');
       
       expect(result.returnType).toBe('User');
       expect(result.mockData).toHaveProperty('id');
@@ -83,7 +83,7 @@ describe('Function Analyzer', () => {
       expect(typeof result.mockData.active).toBe('boolean');
     });
     
-    it('should analyze a function with array of interfaces return type', async () => {
+    it('should analyze a function with array of interfaces return type', () => {
       const functionSource = `
         interface Product {
           id: number;
@@ -96,7 +96,7 @@ describe('Function Analyzer', () => {
         }
       `;
       
-      const result = await analyzeFunctionAndGenerateMock(functionSource, 'getProducts', { count: 2, numberMax: 100 });
+      const result = analyzeFunctionAndGenerateMock(functionSource, 'getProducts', { count: 2, numberMax: 100 });
       
       expect(result.returnType).toBe('Product[]');
       expect(Array.isArray(result.mockData)).toBe(true);
@@ -106,7 +106,7 @@ describe('Function Analyzer', () => {
       expect(result.mockData[0]).toHaveProperty('price');
     });
     
-    it('should analyze arrow function', async () => {
+    it('should analyze arrow function', () => {
       const functionSource = `
         interface Status {
           code: number;
@@ -118,14 +118,14 @@ describe('Function Analyzer', () => {
         };
       `;
       
-      const result = await analyzeFunctionAndGenerateMock(functionSource, 'getStatus');
+      const result = analyzeFunctionAndGenerateMock(functionSource, 'getStatus');
       
       expect(result.returnType).toBe('Status');
       expect(result.mockData).toHaveProperty('code');
       expect(result.mockData).toHaveProperty('message');
     });
     
-    it('should analyze method declaration', async () => {
+    it('should analyze method declaration', () => {
       const functionSource = `
         interface ApiResponse {
           data: string;
@@ -142,14 +142,14 @@ describe('Function Analyzer', () => {
         }
       `;
       
-      const result = await analyzeFunctionAndGenerateMock(functionSource, 'getData');
+      const result = analyzeFunctionAndGenerateMock(functionSource, 'getData');
       
       expect(result.returnType).toBe('ApiResponse');
       expect(result.mockData).toHaveProperty('data');
       expect(result.mockData).toHaveProperty('timestamp');
     });
     
-    it('should handle function with enum return type', async () => {
+    it('should handle function with enum return type', () => {
       const functionSource = `
         enum UserRole {
           ADMIN = "admin",
@@ -170,7 +170,7 @@ describe('Function Analyzer', () => {
         }
       `;
       
-      const result = await analyzeFunctionAndGenerateMock(functionSource, 'getUserInfo');
+      const result = analyzeFunctionAndGenerateMock(functionSource, 'getUserInfo');
       
       expect(result.returnType).toBe('UserInfo');
       expect(result.mockData).toHaveProperty('name');
@@ -178,31 +178,31 @@ describe('Function Analyzer', () => {
       expect(['admin', 'user', 'guest']).toContain(result.mockData.role);
     });
     
-    it('should auto-detect function when no name provided', async () => {
+    it('should auto-detect function when no name provided', () => {
       const functionSource = `
         function getSingleFunction(): string {
           return "test";
         }
       `;
       
-      const result = await analyzeFunctionAndGenerateMock(functionSource);
+      const result = analyzeFunctionAndGenerateMock(functionSource);
       
       expect(result.returnType).toBe('string');
       expect(typeof result.mockData).toBe('string');
     });
     
-    it('should throw error when function not found', async () => {
+    it('should throw error when function not found', () => {
       const functionSource = `
         function existingFunction(): string {
           return "test";
         }
       `;
       
-      await expect(analyzeFunctionAndGenerateMock(functionSource, 'nonExistentFunction'))
-        .rejects.toThrow('Function nonExistentFunction not found');
+      expect(() => analyzeFunctionAndGenerateMock(functionSource, 'nonExistentFunction'))
+        .toThrow('Function nonExistentFunction not found');
     });
     
-    it('should handle functions with inferred return types', async () => {
+    it('should handle functions with inferred return types', () => {
       const functionSource = `
         interface SimpleData {
           value: number;
@@ -214,7 +214,7 @@ describe('Function Analyzer', () => {
         }
       `;
       
-      const result = await analyzeFunctionAndGenerateMock(functionSource, 'getInferredData');
+      const result = analyzeFunctionAndGenerateMock(functionSource, 'getInferredData');
       
       expect(result.mockData).toBeDefined();
     });

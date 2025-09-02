@@ -20,7 +20,6 @@ import { parseTypeScriptDefinitions } from './lib/typescript-parser';
 import { DEFAULT_OPTIONS } from './lib/mock-generator';
 import { GenerationOptions, GeneratedData, ParsedDefinitions } from './types';
 import * as fs from 'fs';
-import * as path from 'path';
 
 // Re-export types for external use
 export { 
@@ -92,10 +91,10 @@ export class PhonyPonyAPI {
    * @param options - Generation options
    * @returns Generated mock data
    */
-  async generateFromSource(
+  generateFromSource(
     sourceOrPath: string, 
     options: Partial<APIOptions> = {}
-  ): Promise<GeneratedData[]> {
+  ): GeneratedData[] {
     const mergedOptions = { ...this.options, ...options };
     
     let source: string;
@@ -109,9 +108,9 @@ export class PhonyPonyAPI {
     }
     
     if (options.outputPath) {
-      return await generateAndSaveMockData(source, mergedOptions, options.outputPath);
+      return generateAndSaveMockData(source, mergedOptions, options.outputPath);
     } else {
-      return await generateMockData(source, mergedOptions);
+      return generateMockData(source, mergedOptions);
     }
   }
 
@@ -122,14 +121,14 @@ export class PhonyPonyAPI {
    * @param options - Analysis options
    * @returns Function analysis result with mock data
    */
-  async analyzeFunction(
+  analyzeFunction(
     functionSourceOrPath: string,
     functionName?: string,
     options: Partial<FunctionAPIOptions> = {}
-  ): Promise<FunctionAnalysisResult> {
+  ): FunctionAnalysisResult {
     const mergedOptions = { ...this.options, ...options };
     
-    return await analyzeFunctionAndGenerateMock(
+    return analyzeFunctionAndGenerateMock(
       functionSourceOrPath,
       functionName,
       mergedOptions,
@@ -143,10 +142,10 @@ export class PhonyPonyAPI {
    * @param options - Generation options
    * @returns Generated mock data
    */
-  async generateFromFunction(
+  generateFromFunction(
     func: Function,
     options: Partial<FunctionAPIOptions> = {}
-  ): Promise<any> {
+  ): any {
     const mergedOptions: RuntimeAnalysisOptions = {
       ...this.options,
       ...options,
@@ -154,7 +153,7 @@ export class PhonyPonyAPI {
       baseDir: options.baseDir || process.cwd()
     };
     
-    return await mockFromFunction(func, mergedOptions);
+    return mockFromFunction(func, mergedOptions);
   }
 
   /**
@@ -163,13 +162,13 @@ export class PhonyPonyAPI {
    * @param options - Generation options
    * @returns Generated mock data
    */
-  async generateFromFunctionEnhanced(
+  generateFromFunctionEnhanced(
     func: Function & { __sourceContext?: string; __baseDir?: string },
     options: Partial<FunctionAPIOptions> = {}
-  ): Promise<any> {
+  ): any {
     const mergedOptions = { ...this.options, ...options };
     
-    return await mockFromFunctionEnhanced(func, mergedOptions);
+    return mockFromFunctionEnhanced(func, mergedOptions);
   }
 
   /**
@@ -178,10 +177,10 @@ export class PhonyPonyAPI {
    * @param options - Auto-discovery options
    * @returns Generated mock data
    */
-  async generateFromFunctionAuto(
+  generateFromFunctionAuto(
     func: Function,
     options: Partial<FunctionAPIOptions> = {}
-  ): Promise<any> {
+  ): any {
     const mergedOptions: AutoDiscoveryOptions = {
       ...this.options,
       ...options,
@@ -191,7 +190,7 @@ export class PhonyPonyAPI {
       maxDepth: options.maxDepth || 10
     };
     
-    return await mockFromFunctionAuto(func, mergedOptions);
+    return mockFromFunctionAuto(func, mergedOptions);
   }
 
   /**
@@ -200,10 +199,10 @@ export class PhonyPonyAPI {
    * @param options - Generation options
    * @returns Generated mock data
    */
-  async generateFromFunctionSmart(
+  generateFromFunctionSmart(
     func: Function & { __sourceContext?: string; __baseDir?: string },
     options: Partial<FunctionAPIOptions> = {}
-  ): Promise<any> {
+  ): any {
     const mergedOptions: AutoDiscoveryOptions = {
       ...this.options,
       ...options,
@@ -213,7 +212,7 @@ export class PhonyPonyAPI {
       maxDepth: options.maxDepth || 10
     };
     
-    return await mockFromFunctionSmart(func, mergedOptions);
+    return mockFromFunctionSmart(func, mergedOptions);
   }
 
   /**
@@ -221,8 +220,8 @@ export class PhonyPonyAPI {
    * @param source - TypeScript source code
    * @returns Parsed type definitions
    */
-  async parseDefinitions(source: string): Promise<ParsedDefinitions> {
-    return await parseTypeScriptDefinitions(source);
+  parseDefinitions(source: string): ParsedDefinitions {
+    return parseTypeScriptDefinitions(source);
   }
 
   /**
@@ -272,21 +271,21 @@ export const api = new PhonyPonyAPI();
  * @param options - Generation options
  * @returns Generated mock data
  */
-export async function generateFromSource(
+export function generateFromSource(
   sourceOrPath: string, 
   options: Partial<APIOptions> = {}
-): Promise<GeneratedData[]> {
-  return await api.generateFromSource(sourceOrPath, options);
+): GeneratedData[] {
+  return api.generateFromSource(sourceOrPath, options);
 }
 
 /**
  * Convenience wrapper that returns a name->data map
  */
-export async function mockFromSource(
+export function mockFromSource(
   sourceOrPath: string,
   options: Partial<APIOptions> = {}
-): Promise<Record<string, any[]>> {
-  const items = await api.generateFromSource(sourceOrPath, options);
+): Record<string, any[]> {
+  const items = api.generateFromSource(sourceOrPath, options);
   const result: Record<string, any[]> = {};
   for (const item of items) {
     result[item.name] = item.data;
@@ -301,12 +300,12 @@ export async function mockFromSource(
  * @param options - Analysis options
  * @returns Function analysis result with mock data
  */
-export async function analyzeFunction(
+export function analyzeFunction(
   functionSourceOrPath: string,
   functionName?: string,
   options: Partial<FunctionAPIOptions> = {}
-): Promise<FunctionAnalysisResult> {
-  return await api.analyzeFunction(functionSourceOrPath, functionName, options);
+): FunctionAnalysisResult {
+  return api.analyzeFunction(functionSourceOrPath, functionName, options);
 }
 
 /**
@@ -315,11 +314,11 @@ export async function analyzeFunction(
  * @param options - Generation options
  * @returns Generated mock data
  */
-export async function generateFromFunction(
+export function generateFromFunction(
   func: Function,
   options: Partial<FunctionAPIOptions> = {}
-): Promise<any> {
-  return await api.generateFromFunction(func, options);
+): any {
+  return api.generateFromFunction(func, options);
 }
 
 /**
@@ -328,11 +327,11 @@ export async function generateFromFunction(
  * @param options - Generation options
  * @returns Generated mock data
  */
-export async function generateFromFunctionEnhanced(
+export function generateFromFunctionEnhanced(
   func: Function & { __sourceContext?: string; __baseDir?: string },
   options: Partial<FunctionAPIOptions> = {}
-): Promise<any> {
-  return await api.generateFromFunctionEnhanced(func, options);
+): any {
+  return api.generateFromFunctionEnhanced(func, options);
 }
 
 /**
@@ -341,11 +340,11 @@ export async function generateFromFunctionEnhanced(
  * @param options - Auto-discovery options
  * @returns Generated mock data
  */
-export async function generateFromFunctionAuto(
+export function generateFromFunctionAuto(
   func: Function,
   options: Partial<FunctionAPIOptions> = {}
-): Promise<any> {
-  return await api.generateFromFunctionAuto(func, options);
+): any {
+  return api.generateFromFunctionAuto(func, options);
 }
 
 /**
@@ -354,11 +353,11 @@ export async function generateFromFunctionAuto(
  * @param options - Generation options
  * @returns Generated mock data
  */
-export async function generateFromFunctionSmart(
+export function generateFromFunctionSmart(
   func: Function & { __sourceContext?: string; __baseDir?: string },
   options: Partial<FunctionAPIOptions> = {}
-): Promise<any> {
-  return await api.generateFromFunctionSmart(func, options);
+): any {
+  return api.generateFromFunctionSmart(func, options);
 }
 
 /**
@@ -366,8 +365,8 @@ export async function generateFromFunctionSmart(
  * @param source - TypeScript source code
  * @returns Parsed type definitions
  */
-export async function parseDefinitions(source: string): Promise<ParsedDefinitions> {
-  return await api.parseDefinitions(source);
+export function parseDefinitions(source: string): ParsedDefinitions {
+  return api.parseDefinitions(source);
 }
 
 /**

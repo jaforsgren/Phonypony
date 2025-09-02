@@ -35,16 +35,16 @@ describe('Auto-Discovery Function Analyzer', () => {
   
   describe('mockFromFunctionAuto', () => {
     
-    it('should auto-discover and generate mock for simple function', async () => {
-      const mock = await mockFromFunctionAuto(getTestUserName, {
+    it('should auto-discover and generate mock for simple function', () => {
+      const mock = mockFromFunctionAuto(getTestUserName, {
         searchDir: __dirname // Start search from test directory
       });
       
       expect(typeof mock).toBe('string');
     });
     
-    it('should auto-discover and generate mock for interface function', async () => {
-      const mock = await mockFromFunctionAuto(getTestUser, {
+    it('should auto-discover and generate mock for interface function', () => {
+      const mock = mockFromFunctionAuto(getTestUser, {
         searchDir: __dirname
       });
       
@@ -58,8 +58,8 @@ describe('Auto-Discovery Function Analyzer', () => {
       expect(typeof mock.active).toBe('boolean');
     });
     
-    it('should auto-discover and generate mock for array function', async () => {
-      const mock = await mockFromFunctionAuto(getTestProducts, {
+    it('should auto-discover and generate mock for array function', () => {
+      const mock = mockFromFunctionAuto(getTestProducts, {
         searchDir: __dirname,
         count: 2
       });
@@ -72,26 +72,26 @@ describe('Auto-Discovery Function Analyzer', () => {
       expect(mock[0]).toHaveProperty('category');
     });
     
-    it('should throw error for anonymous function', async () => {
+    it('should throw error for anonymous function', () => {
       const anonymousFunc = (() => function() { return "test"; })();
       
-      await expect(mockFromFunctionAuto(anonymousFunc))
-        .rejects.toThrow('Function must have a name for auto-discovery');
+      expect(() => mockFromFunctionAuto(anonymousFunc))
+        .toThrow('Function must have a name for auto-discovery');
     });
     
   });
   
   describe('mockFromFunctionSmart', () => {
     
-    it('should use auto-discovery when possible', async () => {
-      const mock = await mockFromFunctionSmart(getTestUserName, {
+    it('should use auto-discovery when possible', () => {
+      const mock = mockFromFunctionSmart(getTestUserName, {
         searchDir: __dirname
       });
       
       expect(typeof mock).toBe('string');
     });
     
-    it('should fallback to source context when auto-discovery fails', async () => {
+    it('should fallback to source context when auto-discovery fails', () => {
       function hiddenFunction(): string {
         return "hidden";
       }
@@ -104,7 +104,7 @@ describe('Auto-Discovery Function Analyzer', () => {
       
       (hiddenFunction as any).__sourceContext = sourceContext;
       
-      const mock = await mockFromFunctionSmart(hiddenFunction as any);
+      const mock = mockFromFunctionSmart(hiddenFunction as any);
       
       expect(typeof mock).toBe('string');
     });
@@ -115,17 +115,17 @@ describe('Auto-Discovery Function Analyzer', () => {
 
 describe('Ideal Usage Demo', () => {
   
-  it('demonstrates the simplest possible API', async () => {
-    const userMock = await mockFromFunctionAuto(getTestUser, {
+  it('demonstrates the simplest possible API', () => {
+    const userMock = mockFromFunctionAuto(getTestUser, {
       searchDir: __dirname
     });
     
-    const productsMock = await mockFromFunctionAuto(getTestProducts, {
+    const productsMock = mockFromFunctionAuto(getTestProducts, {
       searchDir: __dirname,
       count: 3
     });
     
-    const nameMock = await mockFromFunctionAuto(getTestUserName, {
+    const nameMock = mockFromFunctionAuto(getTestUserName, {
       searchDir: __dirname
     });
     
@@ -138,11 +138,6 @@ describe('Ideal Usage Demo', () => {
     expect(productsMock).toHaveLength(3);
     
     expect(typeof nameMock).toBe('string');
-    
-    console.log('Auto-generated mocks:');
-    console.log('User:', userMock);
-    console.log('Products:', productsMock);
-    console.log('Name:', nameMock);
   });
   
 });

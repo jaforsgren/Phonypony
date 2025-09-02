@@ -29,12 +29,12 @@ export interface ImportInfo {
  * @param baseDir - Base directory for resolving relative imports (optional)
  * @returns Analysis result with mock data
  */
-export async function analyzeFunctionAndGenerateMock(
+export function analyzeFunctionAndGenerateMock(
   functionSource: string,
   functionName?: string,
   options: GenerationOptions = DEFAULT_OPTIONS,
   baseDir?: string
-): Promise<FunctionAnalysisResult> {
+): FunctionAnalysisResult {
   
   let sourceCode: string;
   let actualBaseDir: string;
@@ -81,7 +81,7 @@ export async function analyzeFunctionAndGenerateMock(
   const imports = extractImports(sourceFile);
   
   // Resolve types and generate mock data
-  const mockData = await generateMockDataForReturnType(
+  const mockData = generateMockDataForReturnType(
     returnTypeInfo,
     imports,
     actualBaseDir,
@@ -216,12 +216,12 @@ function extractImports(sourceFile: any): ImportInfo[] {
   return imports;
 }
 
-async function generateMockDataForReturnType(
+function generateMockDataForReturnType(
   returnTypeInfo: ReturnTypeInfo,
   imports: ImportInfo[],
   baseDir: string,
   options: GenerationOptions
-): Promise<any> {
+): any {
   
   const baseTypeName = extractBaseTypeName(returnTypeInfo.typeText);
   
@@ -236,7 +236,7 @@ async function generateMockDataForReturnType(
   }
   
   // For complex types, we need to parse the type definitions from the same source
-  const currentSourceResult = await parseTypeScriptDefinitions(getCurrentSourceForParsing());
+  const currentSourceResult = parseTypeScriptDefinitions(getCurrentSourceForParsing());
   
   // Check if the type is defined in the current source
   let typeDefinitions = currentSourceResult;
@@ -245,7 +245,7 @@ async function generateMockDataForReturnType(
   
   // If not found in current source, try to resolve from imports
   if (!foundInCurrent) {
-    typeDefinitions = await resolveTypeDefinitions(returnTypeInfo, imports, baseDir);
+    typeDefinitions = resolveTypeDefinitions(returnTypeInfo, imports, baseDir);
   }
   
   if (typeDefinitions.interfaces.length > 0 || typeDefinitions.types.length > 0) {
@@ -304,11 +304,11 @@ function extractBaseTypeName(typeText: string): string {
   return baseName.trim();
 }
 
-async function resolveTypeDefinitions(
+function resolveTypeDefinitions(
   returnTypeInfo: ReturnTypeInfo,
   imports: ImportInfo[],
   baseDir: string
-): Promise<any> {
+): any {
   
   const typeName = extractBaseTypeName(returnTypeInfo.typeText);
   
@@ -320,7 +320,7 @@ async function resolveTypeDefinitions(
       
       if (fs.existsSync(importFilePath)) {
         const importedSource = fs.readFileSync(importFilePath, 'utf-8');
-        const parsedDefinitions = await parseTypeScriptDefinitions(importedSource);
+        const parsedDefinitions = parseTypeScriptDefinitions(importedSource);
         
         // Check if our target type is in this file
         const hasTargetInterface = parsedDefinitions.interfaces.some(i => i.name === typeName);
@@ -396,13 +396,10 @@ function generateCustomPrimitiveValueFromName(fieldName: string): any {
 }
 
 export function generatePrimitiveValueFromType(typeText: string, options?: GenerationOptions, seed?: number, fieldName?: string): any {
-
-  console.log(`Generating primitive value for type: ${typeText}, field: ${fieldName}`);
   if (seed !== undefined) {
     setFakerSeed(seed);
   }
 
-  
   switch (typeText.toLowerCase()) {
     case 'string':
       // Check if field name indicates it should be a full name
@@ -436,15 +433,15 @@ export interface RuntimeAnalysisOptions extends GenerationOptions {
   baseDir?: string;
 }
 
-export async function mockFromFunction(
+export function mockFromFunction(
   func: Function,
   options: RuntimeAnalysisOptions = { ...DEFAULT_OPTIONS }
-): Promise<any> {
+): any {
   const functionSource = func.toString();
   const functionName = func.name || 'anonymous';
   const sourceToAnalyze = options.sourceContext || functionSource;
   try {
-    const result = await analyzeFunctionAndGenerateMock(
+    const result = analyzeFunctionAndGenerateMock(
       sourceToAnalyze,
       functionName,
       options,
@@ -456,14 +453,14 @@ export async function mockFromFunction(
   }
 }
 
-export async function analyzeFunction(
+export function analyzeFunction(
   func: Function,
   options: RuntimeAnalysisOptions = { ...DEFAULT_OPTIONS }
-): Promise<FunctionAnalysisResult> {
+): FunctionAnalysisResult {
   const functionSource = func.toString();
   const functionName = func.name || 'anonymous';
   const sourceToAnalyze = options.sourceContext || functionSource;
-  return await analyzeFunctionAndGenerateMock(
+  return analyzeFunctionAndGenerateMock(
     sourceToAnalyze,
     functionName,
     options,
@@ -482,28 +479,28 @@ export function withSourceContext<T extends Function>(
   return wrapped;
 }
 
-export async function mockFromFunctionEnhanced(
+export function mockFromFunctionEnhanced(
   func: Function & { __sourceContext?: string; __baseDir?: string },
   options: Partial<RuntimeAnalysisOptions> = {}
-): Promise<any> {
+): any {
   const enhancedOptions: RuntimeAnalysisOptions = {
     ...DEFAULT_OPTIONS,
     ...options,
     sourceContext: func.__sourceContext,
     baseDir: func.__baseDir || process.cwd()
   };
-  return await mockFromFunction(func, enhancedOptions);
+  return mockFromFunction(func, enhancedOptions);
 }
 
-export async function mockFromFunctionAuto(
+export function mockFromFunctionAuto(
   func: Function,
   options: AutoDiscoveryOptions = {}
-): Promise<any> {
+): any {
   const functionName = func.name;
   if (!functionName || functionName === '') {
     throw new Error('Function must have a name for auto-discovery');
   }
-  const sourceFile = await findFunctionSource(func, options);
+  const sourceFile = findFunctionSource(func, options);
   if (!sourceFile) {
     throw new Error(`Could not locate source file for function '${functionName}'`);
   }
@@ -512,7 +509,7 @@ export async function mockFromFunctionAuto(
     ...options
   };
   try {
-    const result = await analyzeFunctionAndGenerateMock(
+    const result = analyzeFunctionAndGenerateMock(
       sourceFile,
       functionName,
       generationOptions,
@@ -524,16 +521,16 @@ export async function mockFromFunctionAuto(
   }
 }
 
-async function findFunctionSource(
+function findFunctionSource(
   func: Function,
   options: AutoDiscoveryOptions
-): Promise<string | null> {
+): string | null {
   const functionName = func.name;
   const searchDir = options.searchDir || process.cwd();
   const filePatterns = options.filePatterns || ['**/*.ts', '**/*.tsx'];
   const recursive = options.recursive !== false;
   const maxDepth = options.maxDepth || 10;
-  const files = await findSourceFiles(searchDir, filePatterns, recursive, maxDepth);
+  const files = findSourceFiles(searchDir, filePatterns, recursive, maxDepth);
   for (const filePath of files) {
     try {
       const content = fs.readFileSync(filePath, 'utf-8');
@@ -555,13 +552,13 @@ async function findFunctionSource(
   return null;
 }
 
-async function findSourceFiles(
+function findSourceFiles(
   searchDir: string,
   patterns: string[],
   recursive: boolean,
   maxDepth: number,
   currentDepth: number = 0
-): Promise<string[]> {
+): string[] {
   if (currentDepth > maxDepth) {
     return [];
   }
@@ -572,7 +569,7 @@ async function findSourceFiles(
       const fullPath = path.join(searchDir, entry.name);
       if (entry.isDirectory() && recursive) {
         if (!['node_modules', '.git', 'dist', 'build', '.next'].includes(entry.name)) {
-          const subFiles = await findSourceFiles(
+          const subFiles = findSourceFiles(
             fullPath,
             patterns,
             recursive,
@@ -593,12 +590,12 @@ async function findSourceFiles(
   return files;
 }
 
-export async function mockFromFunctionSmart(
+export function mockFromFunctionSmart(
   func: Function & { __sourceContext?: string; __baseDir?: string },
   options: AutoDiscoveryOptions = {}
-): Promise<any> {
+): any {
   try {
-    return await mockFromFunctionAuto(func, options);
+    return mockFromFunctionAuto(func, options);
   } catch (autoError) {
     if (func.__sourceContext) {
       const enhancedOptions: RuntimeAnalysisOptions = {
@@ -607,7 +604,7 @@ export async function mockFromFunctionSmart(
         sourceContext: func.__sourceContext,
         baseDir: func.__baseDir || options.searchDir || process.cwd()
       };
-      return await mockFromFunction(func, enhancedOptions);
+      return mockFromFunction(func, enhancedOptions);
     }
     throw new Error(`Could not generate mock for function '${func.name}': ${(autoError as Error).message}`);
   }

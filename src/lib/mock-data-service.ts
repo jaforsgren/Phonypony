@@ -11,11 +11,11 @@ import * as path from 'path';
  * @param options - Generation options
  * @returns Array of generated mock data
  */
-export async function generateMockData(
+export function generateMockData(
   source: string,
   options: GenerationOptions = DEFAULT_OPTIONS
-): Promise<GeneratedData[]> {
-  const result = await parseTypeScriptDefinitions(source);
+): GeneratedData[] {
+  const result = parseTypeScriptDefinitions(source);
   const interfaces = result.interfaces;
   const enums = result.enums;
   const interfaceMap: Record<string, any> = {};
@@ -54,12 +54,12 @@ export async function generateMockData(
  * @param outputPath - Optional file path to save the generated data
  * @returns Array of generated mock data
  */
-export async function generateAndSaveMockData(
+export function generateAndSaveMockData(
   source: string,
   options: GenerationOptions = DEFAULT_OPTIONS,
   outputPath?: string
-): Promise<GeneratedData[]> {
-  const mockData = await generateMockData(source, options);
+): GeneratedData[] {
+  const mockData = generateMockData(source, options);
   
   if (outputPath) {
     const outputDir = path.dirname(outputPath);

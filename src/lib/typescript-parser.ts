@@ -6,7 +6,7 @@ import { InterfaceDefinition, TypeDefinition, EnumDefinition, ParsedDefinitions 
  * @param fileText - TypeScript source code
  * @returns Object containing arrays of interface, type, and enum definitions
  */
-export async function parseTypeScriptDefinitions(fileText: string): Promise<ParsedDefinitions> {
+export function parseTypeScriptDefinitions(fileText: string): ParsedDefinitions {
   const project = new Project({
     useInMemoryFileSystem: true,
     compilerOptions: {
