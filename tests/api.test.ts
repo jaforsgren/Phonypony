@@ -179,6 +179,24 @@ it('generateFromFunctionEnhanced resolves conditional/generic aliases (Box/Unbox
   expect(typeof data).toBe('string');
 });
 
+it('parseDefinitions resolves imported symbols recursively and includes only imported ones', async () => {
+  const bPath = path.resolve(__dirname, 'examples/example-imports-b.ts');
+  const bSource = fs.readFileSync(bPath, 'utf-8');
+
+  // Use direct parser to allow baseDir resolution
+  const parsed = await parseDefinitions(bSource, path.dirname(bPath));
+
+  const interfaceNames = parsed.interfaces.map(i => i.name);
+  const typeNames = parsed.types.map(t => t.name);
+  const enumNames = parsed.enums.map(e => e.name);
+
+  // From A: ImportedUser (interface), ImportedRole (type), ImportedStatus (enum)
+  // From B: Composite (interface) imports only ImportedUser and ImportedRole
+  expect(interfaceNames).toEqual(expect.arrayContaining(['Composite', 'ImportedUser']));
+  expect(enumNames).not.toEqual(expect.arrayContaining(['ImportedStatus']));
+  expect(typeNames).toEqual(expect.arrayContaining(['ImportedRole']));
+});
+
 
 
 

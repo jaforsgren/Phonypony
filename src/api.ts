@@ -220,8 +220,8 @@ export class PhonyPonyAPI {
    * @param source - TypeScript source code
    * @returns Parsed type definitions
    */
-  parseDefinitions(source: string): ParsedDefinitions {
-    return parseTypeScriptDefinitions(source);
+  parseDefinitions(source: string, baseDir?: string): ParsedDefinitions {
+    return parseTypeScriptDefinitions(source, baseDir);
   }
 
   /**
@@ -365,8 +365,8 @@ export function generateFromFunctionSmart(
  * @param source - TypeScript source code
  * @returns Parsed type definitions
  */
-export function parseDefinitions(source: string): ParsedDefinitions {
-  return api.parseDefinitions(source);
+export function parseDefinitions(source: string, baseDir?: string): ParsedDefinitions {
+  return api.parseDefinitions(source, baseDir);
 }
 
 /**

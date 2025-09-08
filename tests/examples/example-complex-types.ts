@@ -12,7 +12,6 @@ type Name = Unbox<Box<string>>;     // string
 type Age = Unbox<Box<number>>;      // number
 type RawBoolean = Unbox<boolean>;   // boolean (not a Box, stays the same)
 
-
 // regular types
 export const AuthenticationRoleConst = {
     ADMIN: "ADMIN",

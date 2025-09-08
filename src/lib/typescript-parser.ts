@@ -1,4 +1,6 @@
 import { Project, ScriptTarget, Node, SyntaxKind, ObjectLiteralExpression, TypeNode, UnionTypeNode } from 'ts-morph';
+import * as fs from 'fs';
+import * as path from 'path';
 import { InterfaceDefinition, TypeDefinition, EnumDefinition, ParsedDefinitions, EnumMember } from '../types';
 
 /**
@@ -6,7 +8,7 @@ import { InterfaceDefinition, TypeDefinition, EnumDefinition, ParsedDefinitions,
  * @param fileText - TypeScript source code
  * @returns Object containing arrays of interface, type, and enum definitions
  */
-export function parseTypeScriptDefinitions(fileText: string): ParsedDefinitions {
+export function parseTypeScriptDefinitions(fileText: string, baseDir?: string): ParsedDefinitions {
   const project = new Project({
     useInMemoryFileSystem: true,
     compilerOptions: {
@@ -31,7 +33,7 @@ export function parseTypeScriptDefinitions(fileText: string): ParsedDefinitions 
   }));
 
   const types: TypeDefinition[] = sourceFile.getTypeAliases().map((t) => {
-    // Robustly extract the right-hand side of the alias as text
+    // extract the right-hand side of the alias as text
     const raw = t.getText();
     const idx = raw.indexOf('=');
     let rhs = t.getTypeNode()?.getText() || 'unknown';
@@ -183,9 +185,63 @@ export function parseTypeScriptDefinitions(fileText: string): ParsedDefinitions 
     kind: 'enum' as const,
   }));
 
+  // Resolve relative imports recursively and include only explicitly imported symbols
+  const importedDefs = resolveImportedDefinitions(sourceFile, baseDir || process.cwd());
+
   return {
-    interfaces,
-    types: [...types, ...interfaceTypes, ...enumTypes],
-    enums: [...enums, ...Object.values(constObjectEnumMap), ...aliasDerivedEnums],
+    interfaces: [...interfaces, ...importedDefs.interfaces],
+    types: [...types, ...interfaceTypes, ...enumTypes, ...importedDefs.types],
+    enums: [...enums, ...Object.values(constObjectEnumMap), ...aliasDerivedEnums, ...importedDefs.enums],
   };
+}
+
+function resolveImportedDefinitions(sourceFile: any, baseDir: string): ParsedDefinitions {
+  const visited = new Set<string>();
+  const aggregate: ParsedDefinitions = { interfaces: [], types: [], enums: [] };
+
+  const importDecls = sourceFile.getImportDeclarations?.() || [];
+  for (const importDecl of importDecls) {
+    const moduleSpecifier = importDecl.getModuleSpecifierValue();
+    if (!moduleSpecifier || !(moduleSpecifier.startsWith('./') || moduleSpecifier.startsWith('../'))) continue;
+
+    // Collect explicitly imported symbol names
+    const importedNames = new Set<string>();
+    importDecl.getNamedImports().forEach((ni: any) => importedNames.add(ni.getName()));
+    // Skip default and namespace imports for now
+    if (importedNames.size === 0) continue;
+
+    const resolvedPath = resolveImportPathFS(moduleSpecifier, baseDir);
+    if (!resolvedPath || visited.has(resolvedPath)) continue;
+    visited.add(resolvedPath);
+
+    try {
+      const fileText = fs.readFileSync(resolvedPath, 'utf-8');
+      const nested = parseTypeScriptDefinitions(fileText, path.dirname(resolvedPath));
+      // Filter to only explicitly imported symbols
+      aggregate.interfaces.push(...nested.interfaces.filter(i => importedNames.has(i.name)));
+      aggregate.enums.push(...nested.enums.filter(e => importedNames.has(e.name)));
+      aggregate.types.push(...nested.types.filter(t => importedNames.has(t.name)));
+    } catch {
+      // ignore read/parse errors
+    }
+  }
+
+  return aggregate;
+}
+
+function resolveImportPathFS(importPath: string, baseDir: string): string | null {
+  const candidates = [
+    `${importPath}.ts`,
+    `${importPath}.tsx`,
+    `${importPath}.d.ts`,
+    `${importPath}/index.ts`,
+    `${importPath}/index.tsx`,
+  ].map(p => path.resolve(baseDir, p));
+
+  for (const candidate of candidates) {
+    if (fs.existsSync(candidate)) return candidate;
+  }
+  const direct = path.resolve(baseDir, importPath);
+  if (fs.existsSync(direct)) return direct;
+  return null;
 }
