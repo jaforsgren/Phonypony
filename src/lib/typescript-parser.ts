@@ -30,11 +30,20 @@ export function parseTypeScriptDefinitions(fileText: string): ParsedDefinitions 
     })),
   }));
 
-  const types: TypeDefinition[] = sourceFile.getTypeAliases().map((t) => ({
-    name: t.getName(),
-    type: t.getTypeNode()?.getText() || 'unknown',
-    kind: 'type' as const,
-  }));
+  const types: TypeDefinition[] = sourceFile.getTypeAliases().map((t) => {
+    // Robustly extract the right-hand side of the alias as text
+    const raw = t.getText();
+    const idx = raw.indexOf('=');
+    let rhs = t.getTypeNode()?.getText() || 'unknown';
+    if (idx !== -1) {
+      rhs = raw.slice(idx + 1).trim().replace(/;$/, '');
+    }
+    return {
+      name: t.getName(),
+      type: rhs,
+      kind: 'type' as const,
+    };
+  });
 
   const enums: EnumDefinition[] = sourceFile.getEnums().map((e) => ({
     name: e.getName(),

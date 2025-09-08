@@ -150,13 +150,17 @@ function analyzeReturnType(targetFunction: any, typeChecker: TypeChecker): Retur
   const returnTypeNode = targetFunction.getReturnTypeNode();
   let typeText: string;
   
-  if (returnTypeNode) {
+  // Prefer the checker to resolve aliases, generics, and conditional types
+  const signature = targetFunction.getSignature();
+  const returnType = signature?.getReturnType();
+  const checkerText = returnType?.getText();
+  if (checkerText && checkerText !== '{}') {
+    typeText = checkerText;
+  } else if (returnTypeNode) {
+    // Fallback to source text when checker returns overly broad '{}'
     typeText = returnTypeNode.getText();
   } else {
-    // Infer return type from type checker
-    const signature = targetFunction.getSignature();
-    const returnType = signature?.getReturnType();
-    typeText = returnType?.getText() || 'any';
+    typeText = 'any';
   }
   
   // Clean up the type text

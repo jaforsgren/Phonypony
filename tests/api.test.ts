@@ -141,6 +141,42 @@ it('mockFromSource works with complex types', async () => {
   expect(order).toHaveProperty('email');
   expect(order).toHaveProperty('role');
   expect(order).toHaveProperty('cognitoId');
+
+  // Primitive aliases resolved via Unbox
+  expect(Object.keys(map)).toEqual(expect.arrayContaining(['IUserDTO2', 'Name', 'Age', 'RawBoolean']));
+  expect(Array.isArray(map.Name)).toBe(true);
+  expect(typeof map.Name[0]).toBe('string');
+  expect(typeof map.Age[0]).toBe('number');
+  expect(typeof map.RawBoolean[0]).toBe('boolean');
+});
+
+it('parseDefinitions extracts enums from const objects and aliases', async () => {
+  const complexPath = path.resolve(__dirname, 'examples/example-complex-types.ts');
+  const complexSource = fs.readFileSync(complexPath, 'utf-8');
+  const parsed = await parseDefinitions(complexSource);
+
+  const enumNames = parsed.enums.map(e => e.name);
+  expect(enumNames).toEqual(expect.arrayContaining([
+    'AuthenticationRoleConst',
+    'UserRole',
+    'AuthenticationRole'
+  ]));
+
+  const authConst = parsed.enums.find(e => e.name === 'AuthenticationRoleConst')!;
+  const values = authConst.members.map(m => m.value);
+  expect(values).toEqual(expect.arrayContaining(['ADMIN', 'SUPERVISOR', 'CONSULTANT_MANAGER', 'STAFF']));
+});
+
+it('generateFromFunctionEnhanced resolves conditional/generic aliases (Box/Unbox)', async () => {
+  function getValue() { return '' as any; }
+  const wrapped = createWithSourceContext(getValue, `
+    type Box<T> = { value: T };
+    type Unbox<T> = T extends Box<infer Inner> ? Inner : T;
+    type Name = Unbox<Box<string>>;
+    function getValue(): Name { return 'ok'; }
+  `);
+  const data = await generateFromFunctionEnhanced(wrapped, { count: 1 });
+  expect(typeof data).toBe('string');
 });
 
 
