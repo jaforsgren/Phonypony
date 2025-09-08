@@ -24,11 +24,11 @@ export interface EnumDefinition {
   name: string;
   members: EnumMember[];
 }
-
 export interface TypeDefinition {
   name: string;
   type: string;
-  kind: 'interface' | 'type' | 'enum';
+  kind: 'type' | 'interface' | 'enum';
+  unionTypes?: string[];
 }
 
 export interface ParsedDefinitions {

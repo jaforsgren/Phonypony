@@ -128,5 +128,22 @@ describe('Public API', () => {
     expect(names).toEqual(expect.arrayContaining(['Pony', 'Product', 'Order']));
   });
 });
+it('mockFromSource works with complex types', async () => {
+  const map = await mockFromSource('/Users/johanforsgren/DEV/PERSONAL/phonypony/tests/examples/example-complex-types.ts', { count: 3, numberMax: 50, seed: 42 });
+
+  // Union types
+  expect(Object.values(map['IUserDTO2'][0])).toEqual(expect.arrayContaining([
+    'revolutionize scalable models', 'Mariela.Stamm@hotmail.com', 'SUPERVISOR', 'synthesize bricks-and-clicks solutions'
+  ]));
+
+  const order = map.IUserDTO2[0];
+  expect(order).toHaveProperty('id');
+  expect(order).toHaveProperty('email');
+  expect(order).toHaveProperty('role');
+  expect(order).toHaveProperty('cognitoId');
+});
+
+
+
 
 
